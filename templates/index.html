@@ -17,6 +17,8 @@
         --text-color: #1e293b;
         --text-secondary: #64748b;
         --border-color: #e2e8f0;
+        --warning-color: #f59e0b;
+        --alert-color: #dc2626;
       }
 
       * {
@@ -152,6 +154,56 @@
           padding: 1rem;
         }
       }
+
+      .abnormal-cases {
+        margin-top: 2rem;
+      }
+
+      .case-item {
+        background-color: var(--card-background);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .case-item.warning {
+        border-left: 4px solid var(--warning-color);
+      }
+
+      .case-item.alert {
+        border-left: 4px solid var(--alert-color);
+      }
+
+      .case-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .case-title {
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      .case-timestamp {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+      }
+
+      .case-details {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+      }
+
+      .case-details pre {
+        background-color: var(--background-color);
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        overflow-x: auto;
+      }
     </style>
     <script>
       let timeLeft = 5; // seconds until refresh
@@ -204,6 +256,25 @@
           </ul>
         </div>
       </div>
+
+      {% if abnormal_cases %}
+      <div class="abnormal-cases">
+        <h2 class="peaks-title">Abnormal Cases</h2>
+        {% for case in abnormal_cases|reverse %}
+        <div class="case-item {{ case.severity }}">
+          <div class="case-header">
+            <div class="case-title">{{ case.description }}</div>
+            <div class="case-timestamp">{{ case.timestamp }}</div>
+          </div>
+          {% if case.details %}
+          <div class="case-details">
+            <pre>{{ case.details | tojson(indent=2) }}</pre>
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
   </body>
 </html>

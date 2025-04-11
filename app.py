@@ -10,6 +10,7 @@ from scipy.signal import welch, find_peaks
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+from findCases import SpectrumAnalyzer
 
 app = Flask(__name__)
 
@@ -17,9 +18,11 @@ app = Flask(__name__)
 latest_peaks = []
 last_update_time = 0
 update_interval = 5  # seconds
+spectrum_analyzer = SpectrumAnalyzer()
+abnormal_cases = []
 
 def process_sdr_data():
-    global latest_peaks, last_update_time
+    global latest_peaks, last_update_time, abnormal_cases
     
     while True:
         try:
@@ -33,23 +36,30 @@ def process_sdr_data():
 
             # Calculate PSD
             f, Pxx = welch(samples, fs=sdr.sample_rate, nperseg=1024)
-            f_GHz = f / 1e6
+            f_mhz = f / 1e6
             Pxx_db = 10 * np.log10(Pxx)
 
             # Peak detection
             mean_power = np.mean(Pxx_db)
-            peaks, _ = find_peaks(Pxx_db, height=mean_power + 3.0, distance=5, prominence=0.1)
-
-            peak_freqs = f_GHz[peaks]
+            peaks, _ = find_peaks(Pxx_db, height=mean_power + 3.0, distance=10, prominence=0.5)
+            peak_freqs = f_mhz[peaks]
             peak_powers = Pxx_db[peaks]
 
             # Update latest peaks
             latest_peaks = list(zip(peak_freqs, peak_powers))
             last_update_time = time.time()
 
+            # Analyze for unusual cases
+            case = spectrum_analyzer.analyze_peaks(peak_freqs, peak_powers)
+            if case:
+                abnormal_cases.append(case)
+                # Save cases to file periodically
+                if len(abnormal_cases) % 10 == 0:
+                    spectrum_analyzer.save_cases()
+
             # Plot and save
             plt.figure(figsize=(10, 6))
-            plt.plot(f_GHz, Pxx_db, label='PSD')
+            plt.plot(f_mhz, Pxx_db, label='PSD')
             plt.plot(peak_freqs, peak_powers, 'ro', label='Peaks')
             for i, pf in enumerate(peak_freqs):
                 plt.annotate(f'{pf:.2f} GHz', xy=(pf, peak_powers[i]),
@@ -75,6 +85,7 @@ def index():
     return render_template(
         'index.html',
         peaks=latest_peaks,
+        abnormal_cases=abnormal_cases[-5:],  # Show last 5 abnormal cases
         random=random.random
     )
 
@@ -89,4 +100,3 @@ if __name__ == '__main__':
     
     # Start the Flask app
     app.run(host='0.0.0.0', port=5000, debug=True)
-
