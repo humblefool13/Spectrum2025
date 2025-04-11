@@ -1,0 +1,5 @@
+Flask
+rtlsdr
+scipy
+numpy
+matplotlib
