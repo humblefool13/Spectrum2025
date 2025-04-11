@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RTL-SDR Spectrum Analyzer</title>
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #2563eb;
+        --secondary-color: #1e40af;
+        --background-color: #f8fafc;
+        --card-background: #ffffff;
+        --text-color: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        line-height: 1.5;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+      }
+
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #22c55e;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 2rem;
+      }
+
+      .spectrum-container {
+        background-color: var(--card-background);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .spectrum-image {
+        width: 100%;
+        height: auto;
+        border-radius: 0.25rem;
+      }
+
+      .peaks-container {
+        background-color: var(--card-background);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .peaks-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+      }
+
+      .peaks-list {
+        list-style: none;
+      }
+
+      .peak-item {
+        background-color: var(--background-color);
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.375rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.2s;
+      }
+
+      .peak-item:hover {
+        transform: translateX(4px);
+      }
+
+      .peak-frequency {
+        font-weight: 500;
+        color: var(--primary-color);
+      }
+
+      .peak-power {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+      }
+
+      @media (max-width: 768px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+
+        .container {
+          padding: 1rem;
+        }
+      }
+    </style>
+    <script>
+      let timeLeft = 5; // seconds until refresh
+
+      function updateTime() {
+        timeLeft--;
+        if (timeLeft <= 0) {
+          timeLeft = 5;
+          window.location.reload();
+        }
+        document.getElementById(
+          "update-time"
+        ).textContent = `Refreshing in ${timeLeft} seconds`;
+      }
+
+      // Update time every second
+      setInterval(updateTime, 1000);
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 class="title">RTL-SDR Spectrum Analyzer</h1>
+        <div class="status">
+          <div class="status-indicator"></div>
+          <span id="update-time">Refreshing in 5 seconds</span>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="spectrum-container">
+          <img
+            src="/static/spectrum.png?{{ random() }}"
+            alt="Spectrum Analysis"
+            class="spectrum-image"
+          />
+        </div>
+
+        <div class="peaks-container">
+          <h2 class="peaks-title">Detected Peaks</h2>
+          <ul class="peaks-list">
+            {% for freq, power in peaks %}
+            <li class="peak-item">
+              <span class="peak-frequency"
+                >{{ "%.2f" | format(freq) }} GHz</span
+              >
+              <span class="peak-power">{{ "%.2f" | format(power) }} dB</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
