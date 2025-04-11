@@ -2,6 +2,7 @@ import numpy as np
 from collections import defaultdict
 import json
 from datetime import datetime
+from sentinels_web3 import upload_event_and_reward
 
 class SpectrumAnalyzer:
     def __init__(self):
@@ -9,7 +10,7 @@ class SpectrumAnalyzer:
         self.abnormal_cases = []
         self.config = {
             'power_threshold': 3.0,  # dB above mean to consider as peak
-            'high_power_threshold': -57.0,  # dB threshold for high power
+            'high_power_threshold': -60.0,  # dB threshold for high power
             'unusual_frequency_threshold': 2.0,  # Standard deviations for unusual frequency
             'max_peaks_threshold': 15  # Maximum number of peaks to consider normal
         }
@@ -71,7 +72,9 @@ class SpectrumAnalyzer:
             "severity": severity,
             "details": details or {}
         }
+        is_alert = severity != "warning"
         self.abnormal_cases.append(case)
+        tx_hash = upload_event_and_reward(case, is_alert)
         return case
 
     def get_abnormal_cases(self, limit=10):
